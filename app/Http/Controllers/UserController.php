@@ -53,7 +53,7 @@ class UserController extends Controller
     }
     else
       return response([
-      'message' => 'Unsuccessfully registered user.' 
+      'message' => 'Unsuccessfully registered the user.' 
     ], 500);
   }
 }
