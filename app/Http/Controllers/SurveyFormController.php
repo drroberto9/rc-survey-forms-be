@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 
 use App\Models\SurveyForm;
 use App\Models\SurveyQuestion;
+use App\Models\SurveyTaker;
 
 class SurveyFormController extends Controller
 {
@@ -51,12 +52,16 @@ class SurveyFormController extends Controller
         return response(SurveyForm::orderBy("id", "desc")->get(), 201);
     }
 
-    public function view($id) {
+    public function view($id, Request $request) {
         $collection = new Collection();
+
+        $surveyTaker = SurveyTaker::where([['survey_form_id', $id], ['email', $request->email], ['type', $request->type]])->first();
+
+        if ($surveyTaker) return response(['status' => false], 201);
 
         $surveyForm = SurveyForm::find($id);
         $surveyQuestions = $surveyForm->getSurveyQuestions($id);
 
-        return response(['survey_form' => $surveyForm, 'survey_questions' => $surveyQuestions], 201);
+        return response(['survey_form' => $surveyForm, 'survey_questions' => $surveyQuestions, 'status' => true], 201);
     }
 }
