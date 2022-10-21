@@ -64,4 +64,61 @@ class SurveyFormController extends Controller
 
         return response(['survey_form' => $surveyForm, 'survey_questions' => $surveyQuestions, 'status' => true], 201);
     }
+
+    public function form($id) {
+        $collection = new Collection();
+
+        $surveyForm = SurveyForm::find($id);
+        $surveyQuestions = $surveyForm->getSurveyQuestions($id);
+
+
+        return response(['survey_form' => $surveyForm, 'survey_questions' => $surveyQuestions, 'status' => true], 201);
+    }
+
+    public function forms($id) {
+        $surveyForms = SurveyForm::where('course_id', $id)->get();
+
+        return response(['survey_forms' => $surveyForms, 'status' => true], 201);
+    }
+
+    public function edit(Request $request, $id) {
+        $surveyForm = SurveyForm::find($id);
+
+        $surveyForm->form_title = $request->form_title;
+        $surveyForm->save();
+
+        $collection = new Collection();
+
+        foreach ($request->questions as $question) {
+            if ($question['id']) {
+                $surveyQuestion = SurveyQuestion::find($question['id']);
+                $surveyQuestion->fill([
+                    'question' => $question['question'],
+                    'highest_answer' => $question['highest_answer'],
+                ]);
+                $surveyQuestion->save();
+
+                $collection->push($question['id']);
+            }
+            else {
+                $newSurveyQuestion = new SurveyQuestion();
+                $newSurveyQuestion->fill([
+                    'question' => $question['question'],
+                    'highest_answer' => $question['highest_answer'],
+                ]);
+    
+                $surveyForm->surveyQuestions()->save($newSurveyQuestion);
+                $collection->push($newSurveyQuestion->id);
+            }
+        }
+
+        $surveyQuestions = SurveyQuestion::where('survey_form_id', $id)->get();
+        foreach ($surveyQuestions as $surveyQuestion) {
+            if(!$collection->contains($surveyQuestion->id)) {
+                $surveyQuestion->delete();
+
+            }
+        }
+        return response(["data" => $surveyForm, "status" => true], 201);
+    }
 }

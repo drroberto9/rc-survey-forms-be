@@ -119,4 +119,63 @@ class SurveyTakerController extends Controller
 
         return response(['form' => $surveyForm, 'data' => $takerResults, "status" => true], 201);
     }
+
+    public function courseResult($id) {
+        $surveyForms = SurveyForm::where('course_id', $id)->get();
+
+        $preSurveyCourse = 0;
+        $postSurveyCourse = 0;
+
+        foreach ($surveyForms as $surveyForm) {
+            $takers = SurveyTaker::where('survey_form_id', $surveyForm->id)->orderBy('email', 'ASC')->get();
+            
+            $collection = new Collection();
+            $takerResults = new Collection(); 
+
+            foreach ($takers as $taker) {
+                $results = TakerAnswer::where('survey_taker_id', $taker->id)->get();
+                $survey_score = 0;
+                
+                foreach($results as $result) {
+                    $question = SurveyQuestion::find($result->survey_question_id);
+                    
+                    $score = $this->getScore($question->highest_answer, $result->answer);
+                    $survey_score += $score;
+                }
+    
+                $collection->push([
+                    'id' => $taker->id,
+                    'email' => $taker->email,
+                    'type' => $taker->type,
+                    'status' => $taker->status,
+                    'score' => round($survey_score / (count($results) * 5) * 100, 2)
+                ]);
+            }
+
+            $preSurvey = 0;
+            $postSurvey = 0;
+
+            for ($x = 0; $x < count($collection); $x++) {
+                if ($collection[$x]['type'] === 'pre-survey') {
+                    $preSurvey += $collection[$x]['score'];
+                    if ($x < count($collection) - 1 && $collection[$x]['email'] === $collection[$x+1]['email']) {
+                        $postSurvey += $collection[$x+1]['score'];
+                    }
+                } else {
+                    $postSurvey += $collection[$x]['score'];
+                    if ($x < count($collection) - 1 && $collection[$x]['email'] === $collection[$x+1]['email']) {
+                        $preSurvey += $collection[$x+1]['score'];
+                    }
+                }
+
+                if ($preSurvey !== 0 && $postSurvey !== 0) $x++;
+            }
+
+            $preSurveyCourse += $preSurvey / (count($takers) / 2);
+            $postSurveyCourse += $postSurvey / (count($takers) / 2);
+        }
+
+
+        return response(['pre_survey' => round($preSurveyCourse / $surveyForms->count(), 2), 'post_survey' => round($postSurveyCourse / $surveyForms->count(), 2), "status" => true], 201);
+    }
 }

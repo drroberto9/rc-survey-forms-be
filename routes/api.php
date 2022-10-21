@@ -20,15 +20,19 @@ use App\Http\Controllers\UserController;
 */
 Route::group(['middleware' => 'auth:sanctum'], function(){
     Route::post('create-survey-form', [SurveyFormController::class, 'create']);
+    Route::post('edit-form/{id}', [SurveyFormController::class, 'edit']);
+    Route::get('view-form/{id}', [SurveyFormController::class, 'form']);
+    Route::get('forms/{id}', [SurveyFormController::class, 'forms']);
     Route::get('taker-list/{id}', [SurveyTakerController::class, 'list']);
+    Route::get('course-result/{id}', [SurveyTakerController::class, 'courseResult']);
     Route::get('form-list', [SurveyFormController::class, 'list']);
     Route::post('logout', [UserController::class, 'logout']);
 });
 
 Route::get('form/{id}', [SurveyFormController::class, 'view']);
 Route::post('answer-survey/{id}', [SurveyTakerController::class, 'create']);
-Route::get('survey_result/{id}', [TakerAnswerController::class, 'view']);
-Route::get('all_survey_result/{id}', [TakerAnswerController::class, 'viewPerCourse']);
+Route::get('survey-result/{id}', [TakerAnswerController::class, 'view']);
+Route::get('all-survey-result/{id}', [TakerAnswerController::class, 'viewPerCourse']);
 
 Route::post('login', [UserController::class, 'login']);
 Route::post('signup', [UserController::class, 'signup']);
