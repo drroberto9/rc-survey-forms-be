@@ -143,37 +143,41 @@ class SurveyTakerController extends Controller
                     $survey_score += $score;
                 }
 
-                if ($results->count())
-{                $collection->push([
-                    'id' => $taker->id,
-                    'email' => $taker->email,
-                    'type' => $taker->type,
-                    'status' => $taker->status,
-                    'score' => round($survey_score / ($results->count() * 5) * 100, 2)
-                ]);}
+                if ($results->count()) {
+                    $collection->push([
+                        'id' => $taker->id,
+                        'email' => $taker->email,
+                        'type' => $taker->type,
+                        'status' => $taker->status,
+                        'score' => round($survey_score / ($results->count() * 5) * 100, 2)
+                    ]);
+                }
             }
 
-            $preSurvey = 0;
-            $postSurvey = 0;
+            if (count($takers))
+            {
+                $preSurvey = 0;
+                $postSurvey = 0;
 
-            for ($x = 0; $x < count($collection); $x++) {
-                if ($collection[$x]['type'] === 'pre-survey') {
-                    $preSurvey += $collection[$x]['score'];
-                    if ($x < count($collection) - 1 && $collection[$x]['email'] === $collection[$x+1]['email']) {
-                        $postSurvey += $collection[$x+1]['score'];
+                for ($x = 0; $x < count($collection); $x++) {
+                    if ($collection[$x]['type'] === 'pre-survey') {
+                        $preSurvey += $collection[$x]['score'];
+                        if ($x < count($collection) - 1 && $collection[$x]['email'] === $collection[$x+1]['email']) {
+                            $postSurvey += $collection[$x+1]['score'];
+                        }
+                    } else {
+                        $postSurvey += $collection[$x]['score'];
+                        if ($x < count($collection) - 1 && $collection[$x]['email'] === $collection[$x+1]['email']) {
+                            $preSurvey += $collection[$x+1]['score'];
+                        }
                     }
-                } else {
-                    $postSurvey += $collection[$x]['score'];
-                    if ($x < count($collection) - 1 && $collection[$x]['email'] === $collection[$x+1]['email']) {
-                        $preSurvey += $collection[$x+1]['score'];
-                    }
+
+                    if ($preSurvey !== 0 && $postSurvey !== 0) $x++;
                 }
 
-                if ($preSurvey !== 0 && $postSurvey !== 0) $x++;
+                $preSurveyCourse += $preSurvey / (count($takers) / 2);
+                $postSurveyCourse += $postSurvey / (count($takers) / 2);
             }
-
-            $preSurveyCourse += $preSurvey / (count($takers) / 2);
-            $postSurveyCourse += $postSurvey / (count($takers) / 2);
         }
 
 
