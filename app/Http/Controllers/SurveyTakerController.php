@@ -142,14 +142,15 @@ class SurveyTakerController extends Controller
                     $score = $this->getScore($question->highest_answer, $result->answer);
                     $survey_score += $score;
                 }
-    
-                $collection->push([
+
+                if ($results->count())
+{                $collection->push([
                     'id' => $taker->id,
                     'email' => $taker->email,
                     'type' => $taker->type,
                     'status' => $taker->status,
-                    'score' => round($survey_score / (count($results) * 5) * 100, 2)
-                ]);
+                    'score' => round($survey_score / ($results->count() * 5) * 100, 2)
+                ]);}
             }
 
             $preSurvey = 0;
